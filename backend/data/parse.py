@@ -1,7 +1,11 @@
 import pandas as pd
 
 ROW_LIMIT = 50000
-PARSE_FLAG = True
+PARSE_FLAG = False
+
+# Parse flag is a one time operation to get the final parsed data
+# from the original data set -> the parsed_data.csv file in data/
+# contains the info we need to build the search engine (for now)
 
 
 def minimize(input_file, output_file):
@@ -27,6 +31,6 @@ def parse(input_file, output_file):
 
 if __name__ == "__main__":
     if PARSE_FLAG:
-        # minimize("./processed_data.csv", "./minimzed_data.csv") 
-        parse("./minimzed_data.csv", "./parsed_data.csv")
+        minimize("./processed_data.csv", "./minimized_data.csv") 
+        parse("./minimized_data.csv", "./parsed_data.csv")
 
