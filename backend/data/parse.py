@@ -3,7 +3,7 @@ import pandas as pd
 ROW_LIMIT = 50000
 PARSE_FLAG = False
 
-# Parse flag is a one time operation to get the final parsed data
+# PARSE_FLAG is a one time operation to get the final parsed data
 # from the original data set -> the parsed_data.csv file in data/
 # contains the info we need to build the search engine (for now)
 
