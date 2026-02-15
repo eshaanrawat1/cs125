@@ -79,7 +79,7 @@ function App() {
       <div className="max-w-3xl mx-auto">
         <h1 className="text-3xl font-bold text-center text-gray-900 mb-8 flex items-center justify-center gap-2">
           <FaRegPaperPlane size={25}/>
-          FAANGPLS <span className="text-blue-600">Smart Travel</span>
+          FAANGPLS <span className="text-blue-600">Smart Travel Advising</span>
         </h1>
         
         {/* Search Controls */}

@@ -22,3 +22,14 @@ Open a terminal in /frontend and run this command:
 ```
 npm i
 ```
+
+## Running the application
+Open a terminal in the backend virtual environment and run this command to start the backend server:
+```
+uvicorn main:app --reload
+```
+
+Open a terminal in the frontend folder and run this command to start the frontend:
+```
+npm run dev
+```
