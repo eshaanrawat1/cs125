@@ -2,7 +2,7 @@
 A recommendation engine for students to get travel recommendations 
 based on contextual factors such as budget preferences, travel destinations, schedule constraints, and more.
 
-## Setup 
+## Backend Setup 
 
 Create virtual environment in /backend: This will be used to 
 store all dependencies like FastAPI. 
@@ -14,4 +14,11 @@ source .venv/bin/activate
 Then, install requirements
 ```
 pip install -r requirements.txt
+```
+
+## Frontend Setup
+
+Open a terminal in /frontend and run this command:
+```
+npm i
 ```
