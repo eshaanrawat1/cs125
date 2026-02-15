@@ -1,13 +1,17 @@
 import json
+import os
 from collections import defaultdict
+from datetime import datetime, timedelta
 
-INDEX_PATH = '../indices/budget.json'
+CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
+# Points to cs125_project/backend/indices/budget.json
+INDEX_PATH = os.path.join(CURRENT_DIR, "..", "indices", "budget.json")
 BUCKET_SIZE = 100
 K = 10
 
 
 def load_index():
-    with open(INDEX_PATH, 'r') as f:
+    with open(INDEX_PATH, "r") as f:
         return json.load(f)
 
 
@@ -24,10 +28,10 @@ def get_buckets(min_budget, max_budget):
 
 def get_flights(index, buckets):
     flights = []
-    
+
     for b in buckets:
         if b not in index:
-            continue 
+            continue
 
         flights.extend(index[b].copy())
     return flights
@@ -49,14 +53,14 @@ def city_index(flights):
 def rank_flights(flights, city_index, query_cities):
     if not flights:
         return []
-    
+
     n = len(flights)
-    scores = {i:0 for i in range(n)}
+    scores = {i: 0 for i in range(n)}
 
     for c in query_cities:
         c = c.lower()
         if c not in city_index:
-            continue 
+            continue
 
         for fid in city_index[c]:
             scores[fid] += 1
@@ -72,28 +76,67 @@ def rank_flights(flights, city_index, query_cities):
     return res
 
 
-def search(min_budget, max_budget, query_cities):
+def search(min_budget, max_budget, origin_city, dest_cities):
     index = load_index()
-
     buckets = get_buckets(min_budget, max_budget)
     flights = get_flights(index, buckets)
-    c_index = city_index(flights)
 
-    return rank_flights(
-        flights=flights,
-        city_index=c_index,
-        query_cities=query_cities,
-    )
+    candidates_by_dest = defaultdict(list)
+    origin = origin_city.strip().lower()
+    destinations = [d.strip().lower() for d in dest_cities]
+
+    # Current date in 2026
+    now = datetime.now()
+
+    for flight in flights:
+        f_src = flight["src"].strip().lower()
+        f_dst = flight["dst"].strip().lower()
+
+        if f_src == origin and f_dst in destinations:
+            # Shift 2022 dates to 2026 (approx 1400 days for Feb alignment)
+            original_date = datetime.strptime(flight["date"], "%Y-%m-%d")
+            shifted_date = original_date + timedelta(days=1400)
+
+            # Only show flights occurring after today
+            if shifted_date < now:
+                continue
+
+            try:
+                price = float(flight["totalFare"])
+                score = 10000 / (price + 1)
+            except:
+                score = 0
+
+            flight_copy = flight.copy()
+            flight_copy["score"] = round(score, 2)
+            # OVERWRITE the date string for the frontend
+            flight_copy["date"] = shifted_date.strftime("%Y-%m-%d")
+
+            candidates_by_dest[f_dst].append(flight_copy)
+
+    for dest in candidates_by_dest:
+        candidates_by_dest[dest].sort(key=lambda x: x["score"], reverse=True)
+
+    final_results = []
+    while len(final_results) < 20 and any(candidates_by_dest.values()):
+        for dest in destinations:
+            if candidates_by_dest[dest]:
+                final_results.append(candidates_by_dest[dest].pop(0))
+                if len(final_results) >= 20:
+                    break
+    return final_results
 
 
 def query():
-    min_budget = int(input('What is your minimum budget in USD: '))
-    max_budget = int(input('What is your maximum budget in USD: '))
-    qc = input('Please enter a list of cities by their area code space separated: ').split()
+    min_budget = int(input("What is your minimum budget in USD: "))
+    max_budget = int(input("What is your maximum budget in USD: "))
+    qc = input(
+        "Please enter a list of cities by their area code space separated: "
+    ).split()
 
     res = search(min_budget, max_budget, qc)
     print(res)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     query()
