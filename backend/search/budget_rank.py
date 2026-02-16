@@ -91,8 +91,13 @@ def search(min_budget, max_budget, origin_city, dest_cities):
     for flight in flights:
         f_src = flight["src"].strip().lower()
         f_dst = flight["dst"].strip().lower()
+        price = float(flight["totalFare"])
 
-        if f_src == origin and f_dst in destinations:
+        if (
+            f_src == origin
+            and f_dst in destinations
+            and min_budget <= price <= max_budget
+        ):
             # Shift 2022 dates to 2026 (approx 1400 days for Feb alignment)
             original_date = datetime.strptime(flight["date"], "%Y-%m-%d")
             shifted_date = original_date + timedelta(days=1400)

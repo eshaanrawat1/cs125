@@ -9,7 +9,8 @@ import { getContextBadge } from './utils/flightUtils'
 function App() {
   const [origin, setOrigin] = useState("LGA")
   const [cities, setCities] = useState("MIA, SFO")
-  const [maxBudget, setMaxBudget] = useState(500)
+  const [minBudget, setMinBudget] = useState(0);
+  const [maxBudget, setMaxBudget] = useState(500);
   const [results, setResults] = useState([])
   const [loading, setLoading] = useState(false)
   const [filter, setFilter] = useState("All")
@@ -17,7 +18,9 @@ function App() {
   const handleSearch = async () => {
     setLoading(true);
     try {
-      const response = await fetch(`http://127.0.0.1:8000/search?origin=${origin}&cities=${cities}&min_budget=0&max_budget=${maxBudget}`);
+      const response = await fetch(
+        `http://127.0.0.1:8000/search?origin=${origin}&cities=${cities}&min_budget=${minBudget}&max_budget=${maxBudget}`
+      );
       const data = await response.json();
       
       const enrichedResults = (data.results || []).map(flight => {
