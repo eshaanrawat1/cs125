@@ -44,12 +44,12 @@ function App() {
   });
 
   const categories = ["All", "💰 Best Value", "🎉 Weekend Escape", "⚡ Quick Trip", "👍 Recommended", "☀️ Sunny", "⛅ Cloudy"];
-
   return (
     <SearchTemplate>
       <SearchSection 
         origin={origin} setOrigin={setOrigin}
         cities={cities} setCities={setCities}
+        minBudget={minBudget} setMinBudget={setMinBudget} // ADDED THIS
         maxBudget={maxBudget} setMaxBudget={setMaxBudget}
         onSearch={handleSearch}
         loading={loading}
@@ -69,6 +69,7 @@ function App() {
         !loading && (
           <EmptyResults 
             origin={origin}
+            minBudget={minBudget} // ADDED THIS
             maxBudget={maxBudget}
             resultsFound={results.length > 0}
             filter={filter}
