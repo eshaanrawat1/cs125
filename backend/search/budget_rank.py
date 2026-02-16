@@ -111,6 +111,28 @@ def search(min_budget, max_budget, origin_city, dest_cities):
             flight_copy["score"] = round(score, 2)
             # OVERWRITE the date string for the frontend
             flight_copy["date"] = shifted_date.strftime("%Y-%m-%d")
+            
+            # Add mock weather
+            import random
+            flight_copy["weather"] = "☀️ Sunny" if random.random() > 0.5 else "⛅ Cloudy"
+            
+            # Add category logic (moved from frontend for consistency)
+            duration_str = flight.get("duration", "")
+            match = __import__("re").search(r"(\d+)H", duration_str)
+            hours = int(match.group(1)) if match else 0
+            
+            day = shifted_date.weekday() # 0 is Monday, 4 is Friday, 5 is Saturday
+            
+            if day >= 4: # Friday, Saturday, Sunday (approx weekend)
+                flight_copy["category"] = "🎉 Weekend Escape"
+            elif hours > 0 and hours < 3:
+                flight_copy["category"] = "⚡ Quick Trip"
+            elif score > 50:
+                flight_copy["category"] = "💰 Best Value"
+            elif price < 300:
+                flight_copy["category"] = "👍 Recommended"
+            else:
+                flight_copy["category"] = "✈️ Available"
 
             candidates_by_dest[f_dst].append(flight_copy)
 
