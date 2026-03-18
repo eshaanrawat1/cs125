@@ -1,83 +1,58 @@
-import { useState } from 'react'
-import SearchTemplate from './components/templates/SearchTemplate'
-import SearchSection from './components/organisms/SearchSection'
-import FilterBar from './components/molecules/FilterBar'
-import ResultsFeed from './components/organisms/ResultsFeed'
-import EmptyResults from './components/organisms/EmptyResults'
-import { getContextBadge } from './utils/flightUtils'
+import { useState, useEffect } from "react"
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom"
+import { supabase } from "@/utils/supabaseClient"
+import Search from "@/pages/Search"
+import Login from "@/pages/Login"
+import MainLayout from "@/components/templates/MainLayout"
 
 function App() {
-  const [origin, setOrigin] = useState("LGA")
-  const [cities, setCities] = useState("MIA, SFO")
-  const [minBudget, setMinBudget] = useState(0);
-  const [maxBudget, setMaxBudget] = useState(500);
-  const [results, setResults] = useState([])
-  const [loading, setLoading] = useState(false)
-  const [filter, setFilter] = useState("All")
+  const [session, setSession] = useState(null)
+  const [isInitializing, setIsInitializing] = useState(true)
 
-  const handleSearch = async () => {
-    setLoading(true);
-    try {
-      const response = await fetch(
-        `http://127.0.0.1:8000/search?origin=${origin}&cities=${cities}&min_budget=${minBudget}&max_budget=${maxBudget}`
-      );
-      const data = await response.json();
-      
-      const enrichedResults = (data.results || []).map(flight => {
-        const weather = flight.weather || (Math.random() > 0.5 ? "☀️ Sunny" : "⛅ Cloudy");
-        const badge = getContextBadge(flight);
-        return { ...flight, weather, category: flight.category || badge.label };
-      });
-      
-      setResults(enrichedResults);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session)
+      setIsInitializing(false)
+    })
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session)
+    })
+
+    return () => subscription.unsubscribe()
+  }, [])
+
+  // loading screen
+  if (isInitializing) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center text-gray-500 font-medium">
+        Loading Smart Travel...
+      </div>
+    )
   }
 
-  const filteredResults = results.filter(flight => {
-    if (filter === "All") return true;
-    if (filter === "☀️ Sunny" || filter === "⛅ Cloudy") return flight.weather === filter;
-    return flight.category === filter;
-  });
-
-  const categories = ["All", "💰 Best Value", "🎉 Weekend Escape", "⚡ Quick Trip", "👍 Recommended", "☀️ Sunny", "⛅ Cloudy"];
   return (
-    <SearchTemplate>
-      <SearchSection 
-        origin={origin} setOrigin={setOrigin}
-        cities={cities} setCities={setCities}
-        minBudget={minBudget} setMinBudget={setMinBudget} // ADDED THIS
-        maxBudget={maxBudget} setMaxBudget={setMaxBudget}
-        onSearch={handleSearch}
-        loading={loading}
-      />
-
-      {results.length > 0 && (
-        <FilterBar 
-          categories={categories}
-          activeFilter={filter}
-          onFilterChange={setFilter}
+    <Router>
+      <Routes>
+        <Route 
+          path="/" 
+          element={
+            session ? (
+              <MainLayout>
+                <Search />
+              </MainLayout>
+            ) : (
+              <Navigate to="/login" replace />
+            )
+          } 
         />
-      )}
-
-      {filteredResults.length > 0 ? (
-        <ResultsFeed flights={filteredResults} />
-      ) : (
-        !loading && (
-          <EmptyResults 
-            origin={origin}
-            minBudget={minBudget} // ADDED THIS
-            maxBudget={maxBudget}
-            resultsFound={results.length > 0}
-            filter={filter}
-            onClearFilter={() => setFilter("All")}
-          />
-        )
-      )}
-    </SearchTemplate>
+        
+        <Route 
+          path="/login" 
+          element={!session ? <Login /> : <Navigate to="/" replace />} 
+        />
+      </Routes>
+    </Router>
   )
 }
 

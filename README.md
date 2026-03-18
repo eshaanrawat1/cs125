@@ -8,7 +8,7 @@ Create virtual environment in /backend: This will be used to
 store all dependencies like FastAPI. 
 ```
 python3 -m venv .venv
-source .venv/bin/activate
+source .venv/bin/activate [.venv\Scripts\activate on Windows]
 ```
 
 Then, install requirements
