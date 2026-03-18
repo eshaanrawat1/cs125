@@ -13,10 +13,12 @@ function Search() {
   const [maxBudget, setMaxBudget] = useState(500);
   const [results, setResults] = useState([])
   const [loading, setLoading] = useState(false)
+  const [hasSearched, setHasSearched] = useState(false)
   const [filter, setFilter] = useState("All")
 
   const handleSearch = async () => {
     setLoading(true);
+    setHasSearched(true);
     try {
       const response = await fetch(
         `http://127.0.0.1:8000/search?origin=${origin}&cities=${cities}&min_budget=${minBudget}&max_budget=${maxBudget}`
@@ -66,7 +68,7 @@ function Search() {
       {filteredResults.length > 0 ? (
         <ResultsFeed flights={filteredResults} />
       ) : (
-        !loading && (
+        hasSearched && !loading && filteredResults.length === 0 && (
           <EmptyResults 
             origin={origin}
             minBudget={minBudget} // ADDED THIS
