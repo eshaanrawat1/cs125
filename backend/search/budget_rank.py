@@ -76,7 +76,7 @@ def rank_flights(flights, city_index, query_cities):
     return res
 
 
-def search(min_budget, max_budget, origin_city, dest_cities):
+def search(min_budget, max_budget, origin_city, dest_cities, dest_counts=None, boost_weight=5):
     index = load_index()
     buckets = get_buckets(min_budget, max_budget)
     flights = get_flights(index, buckets)
@@ -87,6 +87,8 @@ def search(min_budget, max_budget, origin_city, dest_cities):
 
     # Current date in 2026
     now = datetime.now()
+
+    max_count = max(dest_counts.values()) if dest_counts else 0
 
     for flight in flights:
         f_src = flight["src"].strip().lower()
@@ -113,7 +115,12 @@ def search(min_budget, max_budget, origin_city, dest_cities):
                 score = 0
 
             flight_copy = flight.copy()
-            flight_copy["score"] = round(score, 2)
+            if max_count > 0:
+                boost = (dest_counts.get(f_dst, 0) / max_count) * boost_weight
+            else:
+                boost = 0
+
+            flight_copy["score"] = round(score + boost, 2)
             # OVERWRITE the date string for the frontend
             flight_copy["date"] = shifted_date.strftime("%Y-%m-%d")
             

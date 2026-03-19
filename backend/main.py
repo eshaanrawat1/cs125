@@ -31,9 +31,9 @@ def search_endpoint(
         append_history(history, user_id, origin, dest_list, min_budget, max_budget)
         top_destinations = get_top_destinations(history, user_id, exclude=dest_list)
 
-        results = search(min_budget, max_budget, origin, dest_list)
-        history_results = search(min_budget, max_budget, origin, top_destinations)[:5]
-        
+        dest_counts = get_destination_counts(history, user_id)
+        results = search(min_budget, max_budget, origin, dest_list, dest_counts)
+        history_results = search(min_budget, max_budget, origin, top_destinations, dest_counts)[:5]
 
         return {
             "count": len(results),

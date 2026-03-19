@@ -4,7 +4,7 @@ from collections import Counter
 from datetime import datetime
 
 HISTORY_PATH = "data/query_history.json"
-MAX_HISTORY = 20
+MAX_HISTORY = 5
 TOP_K = 5
 
 
@@ -21,6 +21,23 @@ def save_history(history):
         json.dump(history, f)
 
 
+def _get_user_queries(history, user_id):
+    user_entry = history.get(user_id)
+
+    try:
+        queries = user_entry.get("queries", [])
+        return queries
+    except:
+        pass
+
+    return user_entry
+
+
+
+def _set_user_queries(history, user_id, queries):
+    history[user_id] = {"queries": queries}
+
+
 def append_history(history, user_id, origin, cities, min_budget, max_budget):
     entry = {
         "timestamp": datetime.utcnow().isoformat() + "Z",
@@ -30,9 +47,9 @@ def append_history(history, user_id, origin, cities, min_budget, max_budget):
         "max_budget": max_budget,
     }
 
-    user_history = history.get(user_id, [])
+    user_history = _get_user_queries(history, user_id)
     user_history.append(entry)
-    history[user_id] = user_history[-MAX_HISTORY:]
+    _set_user_queries(history, user_id, user_history[-MAX_HISTORY:])
     save_history(history)
 
 
@@ -42,13 +59,24 @@ def get_top_destinations(history, user_id, exclude=None):
     except:
         exclude_set = set()
 
-    user_history = history.get(user_id, [])
+    user_history = _get_user_queries(history, user_id)
     cnt = Counter()
 
     for entry in user_history:
-        for c in entry["cities"]:
+        for c in entry.get("cities", []):
             c_norm = c.strip().lower()
             if c_norm and c_norm not in exclude_set:
                 cnt[c_norm] += 1
-
     return [c.upper() for c, _ in cnt.most_common(TOP_K)]
+
+
+def get_destination_counts(history, user_id):
+    user_history = _get_user_queries(history, user_id)
+    cnt = Counter()
+
+    for entry in user_history:
+        for c in entry.get("cities", []):
+            c_norm = c.strip().lower()
+            if c_norm:
+                cnt[c_norm] += 1
+    return cnt
