@@ -1,10 +1,12 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import SearchTemplate from '@/components/templates/SearchTemplate'
 import SearchSection from '@/components/organisms/SearchSection'
 import FilterBar from '@/components/molecules/FilterBar'
 import ResultsFeed from '@/components/organisms/ResultsFeed'
 import EmptyResults from '@/components/organisms/EmptyResults'
 import { getContextBadge } from '@/utils/flightUtils'
+import Typography from '@/components/atoms/Typography'
+import { supabase } from '@/utils/supabaseClient'
 
 function Search() {
   const [origin, setOrigin] = useState("LGA")
@@ -12,16 +14,32 @@ function Search() {
   const [minBudget, setMinBudget] = useState(0);
   const [maxBudget, setMaxBudget] = useState(500);
   const [results, setResults] = useState([])
+  const [historyResults, setHistoryResults] = useState([])
   const [loading, setLoading] = useState(false)
   const [hasSearched, setHasSearched] = useState(false)
   const [filter, setFilter] = useState("All")
+  const [userId, setUserId] = useState("")
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        setUserId(user.id)
+      }
+    }
+    fetchUser()
+  }, [])
 
   const handleSearch = async () => {
     setLoading(true);
     setHasSearched(true);
     try {
+      if (!userId) {
+        console.error("User not loaded yet.")
+        return;
+      }
       const response = await fetch(
-        `http://127.0.0.1:8000/search?origin=${origin}&cities=${cities}&min_budget=${minBudget}&max_budget=${maxBudget}`
+        `http://127.0.0.1:8000/search?origin=${origin}&cities=${cities}&min_budget=${minBudget}&max_budget=${maxBudget}&user_id=${userId}`
       );
       const data = await response.json();
       
@@ -30,8 +48,15 @@ function Search() {
         const badge = getContextBadge(flight);
         return { ...flight, weather, category: flight.category || badge.label };
       });
+
+      const enrichedHistoryResults = (data.history_results || []).map(flight => {
+        const weather = flight.weather || (Math.random() > 0.5 ? "☀️ Sunny" : "⛅ Cloudy");
+        const badge = getContextBadge(flight);
+        return { ...flight, weather, category: flight.category || badge.label };
+      });
       
       setResults(enrichedResults);
+      setHistoryResults(enrichedHistoryResults);
     } catch (err) {
       console.error(err);
     } finally {
@@ -39,11 +64,14 @@ function Search() {
     }
   }
 
-  const filteredResults = results.filter(flight => {
+  const applyFilter = (list) => list.filter(flight => {
     if (filter === "All") return true;
     if (filter === "☀️ Sunny" || filter === "⛅ Cloudy") return flight.weather === filter;
     return flight.category === filter;
   });
+
+  const filteredResults = applyFilter(results)
+  const filteredHistoryResults = applyFilter(historyResults)
 
   const categories = ["All", "💰 Best Value", "🎉 Weekend Escape", "⚡ Quick Trip", "👍 Recommended", "☀️ Sunny", "⛅ Cloudy"];
   return (
@@ -57,7 +85,7 @@ function Search() {
         loading={loading}
       />
 
-      {results.length > 0 && (
+      {(results.length > 0 || historyResults.length > 0) && (
         <FilterBar 
           categories={categories}
           activeFilter={filter}
@@ -66,7 +94,10 @@ function Search() {
       )}
 
       {filteredResults.length > 0 ? (
-        <ResultsFeed flights={filteredResults} />
+        <div className="space-y-4">
+          <Typography variant="h3">Recommended For You</Typography>
+          <ResultsFeed flights={filteredResults} />
+        </div>
       ) : (
         hasSearched && !loading && filteredResults.length === 0 && (
           <EmptyResults 
@@ -78,6 +109,13 @@ function Search() {
             onClearFilter={() => setFilter("All")}
           />
         )
+      )}
+
+      {filteredHistoryResults.length > 0 && (
+        <div className="space-y-4">
+          <Typography variant="h3">Based on Your History</Typography>
+          <ResultsFeed flights={filteredHistoryResults} />
+        </div>
       )}
     </SearchTemplate>
   )
