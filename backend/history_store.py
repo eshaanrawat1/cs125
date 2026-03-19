@@ -24,14 +24,10 @@ def save_history(history):
 def _get_user_queries(history, user_id):
     user_entry = history.get(user_id)
 
-    try:
-        queries = user_entry.get("queries", [])
-        return queries
-    except:
-        pass
+    if user_entry is None:
+        return []
 
-    return user_entry
-
+    return user_entry.get("queries", [])
 
 
 def _set_user_queries(history, user_id, queries):
