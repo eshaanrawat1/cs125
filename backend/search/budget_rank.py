@@ -146,6 +146,10 @@ def search(min_budget, max_budget, origin_city, dest_cities, dest_counts=None, b
             else:
                 flight_copy["category"] = "✈️ Available"
 
+            # Add trip duration (mock: 3-7 days)
+            import random
+            flight_copy["trip_duration"] = random.randint(3, 7)
+
             candidates_by_dest[f_dst].append(flight_copy)
 
     for dest in candidates_by_dest:

@@ -2,7 +2,7 @@ import React from 'react';
 import Typography from '../atoms/Typography';
 import Button from '../atoms/Button';
 
-const EmptyResults = ({ origin, maxBudget, resultsFound, filter, onClearFilter }) => {
+const EmptyResults = ({ origin, minBudget, maxBudget, resultsFound, filter, onClearFilter }) => {
   if (resultsFound) {
     return (
       <div className="text-center py-10 bg-white rounded-xl border border-gray-200">
@@ -22,7 +22,7 @@ const EmptyResults = ({ origin, maxBudget, resultsFound, filter, onClearFilter }
       </Typography>
       <Typography variant="body" className="mb-6 max-w-md mx-auto">
         We couldn't find any flights from <span className="font-semibold text-gray-700">{origin}</span> to your destinations within the 
-        <span className="font-semibold text-gray-700"> ${maxBudget}</span> budget.
+        <span className="font-semibold text-gray-700"> ${minBudget} - ${maxBudget}</span> budget.
       </Typography>
       <div className="flex flex-wrap justify-center gap-3 text-sm">
         <span className="px-3 py-1 bg-blue-50 text-blue-700 rounded-full border border-blue-100">

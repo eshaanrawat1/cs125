@@ -4,6 +4,7 @@ from typing import List, Optional
 
 from search.budget_rank import search
 from history_store import *
+from itinerary import generate_itinerary
 
 app = FastAPI()
 
@@ -15,6 +16,17 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+@app.get("/itinerary")
+def itinerary_endpoint(
+    dst: str = Query(..., description="Destination city"),
+    date: str = Query(..., description="Start date"),
+    days: int = Query(3, description="Number of days")
+):
+    try:
+        return generate_itinerary(dst, date, days)
+    except Exception as e:
+        print(f"ERROR ITINERARY: {e}")
+        return {"error": str(e)}
 
 @app.get("/search")
 def search_endpoint(

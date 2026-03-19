@@ -4,6 +4,7 @@ import SearchSection from '@/components/organisms/SearchSection'
 import FilterBar from '@/components/molecules/FilterBar'
 import ResultsFeed from '@/components/organisms/ResultsFeed'
 import EmptyResults from '@/components/organisms/EmptyResults'
+import ItineraryModal from '@/components/organisms/ItineraryModal'
 import { getContextBadge } from '@/utils/flightUtils'
 import Typography from '@/components/atoms/Typography'
 import { supabase } from '@/utils/supabaseClient'
@@ -19,6 +20,7 @@ function Search() {
   const [hasSearched, setHasSearched] = useState(false)
   const [filter, setFilter] = useState("All")
   const [userId, setUserId] = useState("")
+  const [selectedFlight, setSelectedFlight] = useState(null)
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -74,12 +76,13 @@ function Search() {
   const filteredHistoryResults = applyFilter(historyResults)
 
   const categories = ["All", "💰 Best Value", "🎉 Weekend Escape", "⚡ Quick Trip", "👍 Recommended", "☀️ Sunny", "⛅ Cloudy"];
+
   return (
     <SearchTemplate>
       <SearchSection 
         origin={origin} setOrigin={setOrigin}
         cities={cities} setCities={setCities}
-        minBudget={minBudget} setMinBudget={setMinBudget} // ADDED THIS
+        minBudget={minBudget} setMinBudget={setMinBudget}
         maxBudget={maxBudget} setMaxBudget={setMaxBudget}
         onSearch={handleSearch}
         loading={loading}
@@ -96,13 +99,13 @@ function Search() {
       {filteredResults.length > 0 ? (
         <div className="space-y-4">
           <Typography variant="h3">Recommended For You</Typography>
-          <ResultsFeed flights={filteredResults} />
+          <ResultsFeed flights={filteredResults} onFlightClick={setSelectedFlight} />
         </div>
       ) : (
         hasSearched && !loading && filteredResults.length === 0 && (
           <EmptyResults 
             origin={origin}
-            minBudget={minBudget} // ADDED THIS
+            minBudget={minBudget}
             maxBudget={maxBudget}
             resultsFound={results.length > 0}
             filter={filter}
@@ -112,10 +115,17 @@ function Search() {
       )}
 
       {filteredHistoryResults.length > 0 && (
-        <div className="space-y-4">
+        <div className="space-y-4 mt-8">
           <Typography variant="h3">Based on Your History</Typography>
-          <ResultsFeed flights={filteredHistoryResults} />
+          <ResultsFeed flights={filteredHistoryResults} onFlightClick={setSelectedFlight} />
         </div>
+      )}
+
+      {selectedFlight && (
+        <ItineraryModal 
+          flight={selectedFlight} 
+          onClose={() => setSelectedFlight(null)} 
+        />
       )}
     </SearchTemplate>
   )
