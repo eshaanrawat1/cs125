@@ -1,5 +1,3 @@
-# Creates index by budget
-
 import csv
 import json
 import os
